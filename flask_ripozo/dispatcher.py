@@ -74,11 +74,13 @@ def get_request_query_body_args(request_obj):
         {}
     )
 
+    files = dict(request_obj.files or {})
+    
     # Make a copy of the headers
     headers = _CaseInsentiveDict()
     for key, value in six.iteritems(request_obj.headers):
         headers[key] = value
-    return query_args, body, headers
+    return query_args, body, headers, files
 
 
 class FlaskDispatcher(DispatcherBase):
@@ -203,10 +205,11 @@ def flask_dispatch_wrapper(dispatcher, f, argument_getter=get_request_query_body
         :return: A response that the flask application can return.
         :rtype: flask.Response
         """
-        request_args, body_args, headers = argument_getter(request)
+        request_args, body_args, headers, files = argument_getter(request)
         ripozo_request = RequestContainer(url_params=urlparams,
                                           query_args=request_args,
                                           body_args=body_args,
+                                          files=files,
                                           headers=headers)
         accepted_mimetypes = [accept[0] for accept in request.accept_mimetypes]
         try:
